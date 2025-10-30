@@ -4,7 +4,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "miniprojetofullstackbackendpostgress-production.up.railway.app"
+      "dest": "https://miniprojetofullstackbackendpostgress-production.up.railway.app/$1"
     }
   ]
 }
