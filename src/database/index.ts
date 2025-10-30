@@ -1,63 +1,48 @@
-import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv';
-import pg from 'pg'; 
+import { Sequelize } from "sequelize";
+import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const env = process.env.NODE_ENV || 'development';
-console.log(`>>> [SEQUELIZE] Usando ambiente: ${env}`);
-
-
-const configObject = require('../../config/config.cjs');
-
-if (!configObject[env]) {
-  console.error(`>>> [SEQUELIZE] Erro: Configuração para o ambiente '${env}' não encontrada em config/config.cjs.`);
-  process.exit(1);
-}
-
-const config = configObject[env];
+const isProduction = process.env.NODE_ENV === "production";
 
 let sequelize: Sequelize;
 
-if (config.use_env_variable) {
-  const dbUrl = process.env[config.use_env_variable];
-  console.log(`>>> [SEQUELIZE] Tentando conectar usando ${config.use_env_variable}...`);
-  if (!dbUrl) {
-    console.error(`>>> [SEQUELIZE] Erro: Variável de ambiente ${config.use_env_variable} não definida.`);
-    throw new Error(`Variável de ambiente ${config.use_env_variable} não definida.`);
-  }
-  sequelize = new Sequelize(dbUrl, {
-    ...config, 
-    dialectModule: pg 
+if (isProduction && process.env.DATABASE_URL) {
+  // Produção (Render / Railway / Neon / Vercel)
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: "postgres",
+    dialectOptions: {
+      ssl: { require: true, rejectUnauthorized: false },
+    },
+    logging: false,
   });
+  console.log(">>> [SEQUELIZE] Usando ambiente: produção");
 } else {
-  console.log(`>>> [SEQUELIZE] Tentando conectar usando credenciais separadas...`);
-  if (!config.database || !config.username) {
-     console.error(">>> [SEQUELIZE] Erro: Falta database, username ou password na config de desenvolvimento.");
-     process.exit(1);
-  }
+  // Desenvolvimento local (Docker ou máquina local)
+  console.log(">>> [SEQUELIZE] Usando ambiente: development");
   sequelize = new Sequelize(
-    config.database,
-    config.username,
-    config.password,
-    { 
-      host: config.host,
-      port: config.port,
-      dialect: config.dialect,
-      dialectOptions: config.dialectOptions,
-      dialectModule: pg 
+    process.env.POSTGRES_DATABASE as string,
+    process.env.POSTGRES_USER as string,
+    process.env.POSTGRES_PASSWORD as string,
+    {
+      host: process.env.POSTGRES_HOST || "localhost",
+      port: Number(process.env.POSTGRES_PORT) || 5432,
+      dialect: "postgres",
+      logging: console.log,
     }
   );
 }
 
-const connectDB = async () => {
+export { sequelize };
+
+// Função auxiliar para testar conexão
+export const connectDB = async () => {
   try {
+    console.log(">>> [SEQUELIZE] Tentando conectar usando credenciais separadas...");
     await sequelize.authenticate();
-    console.log('>>> [SEQUELIZE] Conexão com PostgreSQL estabelecida com sucesso.');
+    console.log(">>> [SEQUELIZE] Conexão com PostgreSQL estabelecida com sucesso.");
   } catch (error) {
-    console.error('>>> [SEQUELIZE] Incapaz de conectar ao banco de dados:', error);
+    console.error("❌ Erro ao conectar ao banco:", error);
     throw error;
   }
 };
-
-export { sequelize, connectDB };

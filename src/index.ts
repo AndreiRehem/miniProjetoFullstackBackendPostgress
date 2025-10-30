@@ -9,7 +9,6 @@ dotenv.config();
 
 // 2️⃣ Define ambiente e variáveis conforme o modo
 const isProduction = process.env.NODE_ENV === "production";
-
 const PORT = process.env.PORT || 3000;
 
 // 3️⃣ Loga o ambiente e o banco (sem expor credenciais)
@@ -28,13 +27,19 @@ app.use(express.json());
 app.use("/", authRoutes);
 app.use("/chat", chatRoutes);
 
-// 7️⃣ Conecta ao banco PostgreSQL
+// 7️⃣ Conecta ao banco e sincroniza os modelos
 (async () => {
   try {
     await connectDB();
+
+    // 🔹 Importa os modelos e sincroniza com o banco
+    const db = await import("./models");
+    await db.default.sequelize.sync({ alter: true });
+    console.log("📦 Tabelas sincronizadas com o banco de dados.");
+
     console.log("🚀 Banco de dados conectado com sucesso.");
   } catch (error) {
-    console.error("❌ Falha ao conectar ao banco de dados:", error);
+    console.error("❌ Falha ao conectar ou sincronizar com o banco de dados:", error);
     process.exit(1);
   }
 
