@@ -1,27 +1,40 @@
-import { Schema, model, Document } from "mongoose";
+import { DataTypes, Sequelize, Model } from "sequelize";
 
-export interface IMessage {
-  role: "user" | "model";
-  text: string;
-  timestamp: Date;
+export class Conversation extends Model {
+  public id!: string;
+  public userId!: string;
+  public modelName!: string;
+
+  static associate(models: any) {
+    this.belongsTo(models.User, { foreignKey: "userId", as: "user" });
+    this.hasMany(models.Message, { foreignKey: "conversationId", as: "messages" });
+  }
 }
 
-export interface IConversation extends Document {
-  userId: string;
-  modelName: string;
-  history: IMessage[];
-}
+export const initConversation = (sequelize: Sequelize) => {
+  Conversation.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      userId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      modelName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      modelName: "Conversation",
+      tableName: "conversations",
+      timestamps: true,
+    }
+  );
 
-const MessageSchema = new Schema<IMessage>({
-  role: { type: String, required: true },
-  text: { type: String, required: true },
-  timestamp: { type: Date, required: true },
-});
-
-const ConversationSchema = new Schema<IConversation>({
-  userId: { type: String, required: true },
-  modelName: { type: String, required: true },
-  history: [MessageSchema],
-});
-
-export default model<IConversation>("Conversation", ConversationSchema);
+  return Conversation;
+};

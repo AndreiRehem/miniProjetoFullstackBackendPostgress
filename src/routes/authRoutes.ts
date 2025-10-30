@@ -8,7 +8,7 @@ const router = Router();
 router.post("/register", authController.register);
 router.post("/login", authController.login);
 
-// Rota protegida
+// Rotas protegidas
 router.get("/protected", authenticateToken, authController.protectedRoute);
 
 export default router;

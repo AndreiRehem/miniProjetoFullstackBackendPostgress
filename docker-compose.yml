@@ -1,26 +1,41 @@
-version: "3.8"
 
 services:
-  mongo:
-    image: mongo
-    restart: always
-    ports:
-      - "27017:27017"
+  postgres:
+    container_name: postgres_container
+    image: postgres
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DATABASE:-postgres}
+      PGDATA: /data/postgres
     volumes:
-      - mongo-data:/data/db
-
-  mongo-express:
-    image: mongo-express
-    restart: always
+       - postgres:/data/postgres
     ports:
-      - "8081:8081"
+      - "5432:${POSTGRES_PORT:-5432}"
+    networks:
+      - postgres
+    restart: unless-stopped
+  
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: andrei
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+       - pgadmin:/var/lib/pgadmin
+
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  postgres:
+    driver: bridge
 
 volumes:
-  mongo-data:
+    postgres:
+    pgadmin:
