@@ -25,7 +25,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://mini-projeto-fullstack-frontend-postgress-lulgjpby2.vercel.app",
+      "https://mini-projeto-fullstack-frontend-pos.vercel.app",
       "https://frontendpostgress.andreirehem.dev", // caso você tenha um domínio customizado também
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
