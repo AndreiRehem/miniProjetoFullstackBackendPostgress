@@ -1,6 +1,7 @@
 import express, { Application } from "express";
 import * as dotenv from "dotenv";
 import { connectDB } from "./database";
+import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import chatRoutes from "./routes/chatRoutes";
 
@@ -9,7 +10,7 @@ dotenv.config();
 
 // 2️⃣ Define ambiente e variáveis conforme o modo
 const isProduction = process.env.NODE_ENV === "production";
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 
 // 3️⃣ Loga o ambiente e o banco (sem expor credenciais)
 console.log("===============================================");
@@ -19,6 +20,19 @@ console.log("===============================================");
 
 // 4️⃣ Inicializa o app Express
 const app: Application = express();
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://mini-projeto-fullstack-frontend-postgress-lulgjpby2.vercel.app",
+      "https://frontendpostgress.andreirehem.dev", // caso você tenha um domínio customizado também
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 // 5️⃣ Middlewares globais
 app.use(express.json());
